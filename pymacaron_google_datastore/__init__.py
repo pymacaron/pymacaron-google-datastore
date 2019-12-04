@@ -29,15 +29,13 @@ def _get_client():
 class DatastoreItemNotFound(PyMacaronException):
     pass
 
-#
-# Take a Swagger JSON dict and persist it to/from dynamodb
-#
+
+# keep a mapping of entity name to which pymacaron object class to instantiate
+# it into
 
 model_to_persistent_class = {}
 
 class PersistentSwaggerObject():
-
-
 
     @staticmethod
     def setup(childclass):
