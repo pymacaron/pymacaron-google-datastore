@@ -1,0 +1,7 @@
+dist/
+pymacaron_core
+pymacaron
+pymacaron_google_datastore.egg-info/
+**/__pycache__
+*.tar
+**/*.pyc
