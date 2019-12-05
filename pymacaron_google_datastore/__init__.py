@@ -114,7 +114,6 @@ class PersistentSwaggerObject():
 
     @classmethod
     def import_childclass(self, object):
-        log.debug("__persistence_class__: %s" % object.__persistence_class__)
         components = object.__persistence_class__.split('.')
         mod = __import__(components[0])
         for comp in components[1:]:
@@ -133,7 +132,6 @@ class PersistentSwaggerObject():
         childclass = model_to_persistent_class[self.__class__.__name__]
 
         j = childclass.api.model_to_json(self)
-        log.debug("Storing json into Datastore/%s: %s" % (childclass.table_name, json.dumps(j, indent=2)))
 
         with monitor(kind='Datastore', method='save_to_db'):
             client = _get_client()
@@ -165,5 +163,4 @@ class PersistentSwaggerObject():
         # Monkey-patch this model so we can store it later
         item.save_to_db = types.MethodType(childclass.save_to_db, item)
 
-        log.info("Loaded %s from table %s: %s" % (childclass.model_name, childclass.table_name, pprint.pformat(item, indent=4)))
         return item
