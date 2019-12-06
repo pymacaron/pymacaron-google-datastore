@@ -1,7 +1,5 @@
 import logging
 import types
-import json
-import pprint
 from google.cloud import datastore
 from pymacaron_core.swagger.apipool import ApiPool
 from pymacaron.exceptions import PyMacaronException
@@ -103,9 +101,11 @@ class PersistentSwaggerObject():
         result = None
         with monitor(kind='Datastore', method='load_from_db'):
             client = _get_client()
+            log.debug("Using client %s" % client)
             k = client.key(childclass.table_name, key_value)
             result = client.get(k)
 
+        log.debug("load_from_db gave result: %s" % result)
         if result is None:
             raise DatastoreItemNotFound("Entities %s has no item with %s=%s" % (childclass.table_name, childclass.primary_key, key_value))
 
