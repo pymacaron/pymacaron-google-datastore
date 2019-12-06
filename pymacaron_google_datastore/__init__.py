@@ -14,14 +14,6 @@ db = None
 
 GCLOUD_CLIENT = None
 
-def set_datastore_client(client):
-    global GCLOUD_CLIENT
-    GCLOUD_CLIENT = client
-
-def _get_client():
-    global GCLOUD_CLIENT
-    assert GCLOUD_CLIENT
-    return GCLOUD_CLIENT
 
 # Exception raised if no item found
 class DatastoreItemNotFound(PyMacaronException):
@@ -53,6 +45,8 @@ class PersistentSwaggerObject():
           build index for. Any property that is not the primary_key or in secondary_keys will be
           excluded form indexing.
 
+        * 'gcloud_creds_path': Path to the gcloud crendential file in JSON format
+
         setup() sets the child class's attributes:
 
         * 'api': The pymacaron-core.swagger.api.API instance describing the API
@@ -67,20 +61,23 @@ class PersistentSwaggerObject():
             table_name = getattr(childclass, 'table_name')
             primary_key = getattr(childclass, 'primary_key')
             secondary_keys = getattr(childclass, 'secondary_keys')
+            gcloud_creds_path = getattr(childclass, 'gcloud_creds_path')
 
             assert api_name
             assert model_name
             assert table_name
             assert primary_key
             assert secondary_keys is not None
+            assert gcloud_creds_path
 
-            log.info("Initializing %s with api_name=%s, model_name=%s, table_name=%s, primary_key=%s, secondary_keys=%s" % (
+            log.info("Initializing %s with api_name=%s, model_name=%s, table_name=%s, primary_key=%s, secondary_keys=%s, gcloud_creds_path=%s" % (
                 childclass.__name__,
                 api_name,
                 model_name,
                 table_name,
                 primary_key,
                 secondary_keys,
+                gcloud_creds_path,
             ))
 
             global model_to_persistent_class
@@ -100,8 +97,7 @@ class PersistentSwaggerObject():
 
         result = None
         with monitor(kind='Datastore', method='load_from_db'):
-            client = _get_client()
-            log.debug("Using client %s" % client)
+            client = datastore.Client.from_service_account_json(childclass.gcloud_creds_path)
             k = client.key(childclass.table_name, key_value)
             result = client.get(k)
 
@@ -134,7 +130,7 @@ class PersistentSwaggerObject():
         j = childclass.api.model_to_json(self)
 
         with monitor(kind='Datastore', method='save_to_db'):
-            client = _get_client()
+            client = datastore.Client.from_service_account_json(childclass.gcloud_creds_path)
 
             # Figure out which keys not to index
             index_keys = childclass.secondary_keys + [childclass.primary_key]
